@@ -9,7 +9,7 @@
     "node_2": "nodemon --watch dev -e js dev/networkNode.js 8081 http://localhost:8081",
     "node_3": "nodemon --watch dev -e js dev/networkNode.js 8082 http://localhost:8082",
     "node_4": "nodemon --watch dev -e js dev/networkNode.js 8083 http://localhost:8083",
-    "node_5": "nodemon --watch dev -e js dev/networkNode.js 8084 http://localhost:8084"
+    "node_5": "nodemon --watch dev -e js dev/networkNode.js 8084 https://localhost:8084"
   },
   "author": "",
   "license": "ISC",

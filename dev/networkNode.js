@@ -186,6 +186,83 @@ app.post('/register-nodes-bulk',function(req,res){
     res.json({ note:'Bulk registration successful'});  
 })
 
+app.get('/consensus',function(req,res){
+    const requestPromises = [];
+    
+    bitcoin.networkNode.forEach(networkNodeUrl => {
+        const requestOptions = {
+            uri: networkNodeUrl + '/blockchain',
+            method: 'GET',
+            json: true
+        };
+        
+        requestPromises.push(rp(requestOptions));
+    });
+    
+    Promise.all(requestPromises)
+    .then(blockchains => {
+        const currchainlength = bitcoin.chain.length;
+        let maxchainlength =currchainlength;
+        let newlongestchain = null;
+        let newPendingTransactions = null;
+        
+        blockchains.forEach(blockchain => {
+            if(blockchain.chain.length > maxchainlength)
+            {
+                maxchainlength = blockchain.chain.length;
+                newlongestchain = blockchain.chain;
+                newPendingTransactions = blockchain.pendingTransactions;
+            }
+        })
+        
+        if(!newlongestchain || (newlongestchain && !bitcoin.chainIsValid(newlongestchain))){
+            res.json({
+                note: 'Crrent chain has not been replaced',
+                chain: bitcoin.chain
+            });        
+        }
+        
+        else if(newlongestchain && bitcoin.chainIsValid(newlongestchain)){
+            bitcoin.chain = newlongestchain;
+            bitcoin.pendingTransactions = newPendingTransactions;
+            res.json({
+                note: 'This chain has been replaced',
+                chain: bitcoin.chain
+            });        
+        }
+    });
+});
+
+//block explorer
+
+app.get('/block/:blockhash',function(req,res){
+     const blockhash = req.params.blockhash;
+     const correctBlock = bitcoin.getBlock(blockhash);
+     res.json({
+         block: correctBlock
+     });
+});
+
+app.get('/transaction/:transactionId',function(req,res){
+      const transactionId = req.params.transactionId;
+      const transactiondata = bitcoin.getTransaction(transactionId);
+        res.json({
+            transaction:transactiondata.transaction,
+            block:transactiondata.block
+        })   
+});
+
+app.get('/address/:address',function(req,res){
+    const address = req.params.address;
+    const addressData = bitcoin.getAddressData(address);
+    res.json({
+        addressData: addressData
+    })
+});
+
+app.get('/block-explorer',function(req,res){
+    res.sendFile('./block-explorer/index.html', {root:__dirname});
+})
 
 app.listen(port,function(){
    console.log(`Listening on port ${port}...`); 
